@@ -1,39 +1,20 @@
-// The Summary screen: one week's totals, a day-by-day chart, the week's
-// entries, and the dialog for adding, editing, or deleting an entry.
+// The Summary screen: one week's totals, a day-by-day chart, and the week's
+// entries. Tapping an entry opens the shared entry dialog (entry-dialog.js).
 
-import { duration, timeOfDay, dayLabel, dayLetter, dateInputValue, fromDateTimeInputs } from './format.js';
+import { duration, timeOfDay, dayLabel, dayLetter } from './format.js';
 import { weekSummary, startOfWeek, addDays, goalProgress } from './stats.js';
 import { el } from './dom.js';
-import { showToast } from './toast.js';
 
 const MS_PER_MINUTE = 60 * 1000;
-const MS_PER_HOUR = 60 * MS_PER_MINUTE;
 
-export function initSummaryScreen(storage) {
+export function initSummaryScreen(storage, entryDialog) {
   const weekLabel = document.getElementById('week-label');
   const prevButton = document.getElementById('week-prev');
   const nextButton = document.getElementById('week-next');
   const body = document.getElementById('summary-body');
   const addButton = document.getElementById('add-entry');
 
-  const dialog = document.getElementById('entry-dialog');
-  const dialogTitle = document.getElementById('entry-title');
-  const kindRow = document.getElementById('entry-kind-row');
-  const kindSelect = document.getElementById('entry-kind');
-  const typeRow = document.getElementById('entry-type-row');
-  const typeSelect = document.getElementById('entry-type');
-  const nameRow = document.getElementById('entry-name-row');
-  const nameInput = document.getElementById('entry-name');
-  const nameOptions = document.getElementById('sweet-names');
-  const dateInput = document.getElementById('entry-date');
-  const timeInput = document.getElementById('entry-time');
-  const durationRow = document.getElementById('entry-duration-row');
-  const hoursInput = document.getElementById('entry-hours');
-  const minutesInput = document.getElementById('entry-minutes');
-  const deleteButton = document.getElementById('entry-delete');
-
   let shownWeek = startOfWeek(Date.now()); // the Sunday of the week on screen
-  let editing = null; // the entry being edited: { kind, entry }, or null when adding
 
   function typeName(typeId) {
     const type = storage.data.exerciseTypes.find((t) => t.id === typeId);
@@ -128,7 +109,7 @@ export function initSummaryScreen(storage) {
           { class: 'entry-list' },
           rows.map((row) =>
             el('li', {}, [
-              el('button', { type: 'button', class: 'entry-button', onclick: () => openEdit(row.kind, row.entry) }, [
+              el('button', { type: 'button', class: 'entry-button', onclick: () => entryDialog.openEdit(row.kind, row.entry, afterDialog) }, [
                 el('span', { text: row.text }),
                 el('span', { class: 'entry-time', text: timeOfDay(row.when) }),
               ]),
@@ -162,118 +143,10 @@ export function initSummaryScreen(storage) {
     );
   }
 
-  // ---- the add / edit dialog ----
-
-  // Show only the fields that fit the kind of entry. Hidden fields are also
-  // disabled, so the browser does not demand a value for them.
-  function showFieldsFor(kind) {
-    const isExercise = kind === 'exercise';
-    typeRow.hidden = !isExercise;
-    durationRow.hidden = !isExercise;
-    nameRow.hidden = isExercise;
-    typeSelect.disabled = !isExercise;
-    hoursInput.disabled = !isExercise;
-    minutesInput.disabled = !isExercise;
-    nameInput.disabled = isExercise;
-  }
-
-  function fillChoices(selectedTypeId) {
-    // Offer types still in use, plus the entry's own type even if it was removed.
-    const types = storage.data.exerciseTypes.filter((t) => !t.archived || t.id === selectedTypeId);
-    typeSelect.replaceChildren(...types.map((t) => el('option', { value: t.id, text: t.name })));
-    if (selectedTypeId) typeSelect.value = selectedTypeId;
-
-    const sweets = storage.data.sweetTypes.filter((t) => !t.archived);
-    nameOptions.replaceChildren(...sweets.map((t) => el('option', { value: t.name })));
-  }
-
-  function openDialog(kind, when) {
-    showFieldsFor(kind);
-    dateInput.max = dateInputValue(Date.now());
-    dateInput.value = dateInputValue(when);
-    timeInput.value = timeOfDay(when);
-    dialog.returnValue = '';
-    dialog.showModal();
-  }
-
-  function openAdd() {
-    editing = null;
-    dialogTitle.textContent = 'Add past entry';
-    kindRow.hidden = false;
-    kindSelect.value = 'exercise';
-    deleteButton.hidden = true;
-    fillChoices(null);
-    nameInput.value = '';
-    hoursInput.value = 0;
-    minutesInput.value = 30;
-    openDialog('exercise', Date.now());
-  }
-
-  function openEdit(kind, entry) {
-    editing = { kind, entry };
-    dialogTitle.textContent = kind === 'exercise' ? 'Edit workout' : 'Edit sweet';
-    kindRow.hidden = true;
-    deleteButton.hidden = false;
-    fillChoices(kind === 'exercise' ? entry.typeId : null);
-
-    if (kind === 'exercise') {
-      hoursInput.value = Math.floor(entry.durationMs / MS_PER_HOUR);
-      minutesInput.value = Math.floor((entry.durationMs % MS_PER_HOUR) / MS_PER_MINUTE);
-    } else {
-      nameInput.value = entry.name;
-    }
-
-    openDialog(kind, kind === 'exercise' ? entry.startedAt : entry.eatenAt);
-  }
-
-  // Read the dialog's fields. Returns { values } or { problem: 'why not' }.
-  function readDialog(kind) {
-    const when = fromDateTimeInputs(dateInput.value, timeInput.value);
-    if (when === null) return { problem: 'Pick a date and time' };
-    if (when > Date.now()) return { problem: 'That time is in the future' };
-
-    if (kind === 'sweet') {
-      const name = nameInput.value.trim();
-      return name ? { values: { name, eatenAt: when } } : { problem: 'Enter a name' };
-    }
-
-    const hours = Number(hoursInput.value) || 0;
-    const minutes = Number(minutesInput.value) || 0;
-    let durationMs = hours * MS_PER_HOUR + minutes * MS_PER_MINUTE;
-
-    // Editing without touching the duration keeps the exact measured time.
-    if (editing) {
-      const old = editing.entry.durationMs;
-      const untouched = hours === Math.floor(old / MS_PER_HOUR) && minutes === Math.floor((old % MS_PER_HOUR) / MS_PER_MINUTE);
-      if (untouched) durationMs = old;
-    }
-
-    if (durationMs <= 0) return { problem: 'Enter how long it took' };
-    return { values: { typeId: typeSelect.value, startedAt: when, durationMs } };
-  }
-
-  function closeDialog() {
-    const kind = editing ? editing.kind : kindSelect.value;
-
-    if (dialog.returnValue === 'delete' && editing) {
-      if (kind === 'exercise') storage.deleteSession(editing.entry.id);
-      else storage.deleteSweet(editing.entry.id);
-    } else if (dialog.returnValue === 'save') {
-      const result = readDialog(kind);
-      if (result.problem) {
-        showToast(`Not saved: ${result.problem}`);
-      } else if (editing) {
-        if (kind === 'exercise') storage.updateSession(editing.entry.id, result.values);
-        else storage.updateSweet(editing.entry.id, result.values);
-      } else {
-        if (kind === 'exercise') storage.addSession(result.values);
-        else storage.addSweet(result.values);
-        // Jump to the week the new entry landed in, so it is visible.
-        shownWeek = startOfWeek(kind === 'exercise' ? result.values.startedAt : result.values.eatenAt);
-      }
-    }
-
-    editing = null;
+  // Runs when the entry dialog closes.
+  function afterDialog(outcome) {
+    // Jump to the week a new entry landed in, so it is visible.
+    if (outcome.action === 'added') shownWeek = startOfWeek(outcome.when);
     render();
   }
 
@@ -285,9 +158,7 @@ export function initSummaryScreen(storage) {
     shownWeek = addDays(shownWeek, 7);
     render();
   });
-  addButton.addEventListener('click', openAdd);
-  kindSelect.addEventListener('change', () => showFieldsFor(kindSelect.value));
-  dialog.addEventListener('close', closeDialog);
+  addButton.addEventListener('click', () => entryDialog.openAdd(afterDialog));
 
   return { render };
 }

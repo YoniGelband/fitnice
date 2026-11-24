@@ -540,3 +540,9 @@ p.empty {
   font: inherit;
   text-align: center;
 }
+
+/* A small arrow shows that an entry can be tapped to change it. */
+.entry-button .entry-time::after {
+  content: " \203A";
+  font-size: 1.125rem;
+}

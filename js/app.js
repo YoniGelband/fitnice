@@ -5,6 +5,7 @@ import { initExerciseScreen } from './ui-exercise.js';
 import { initSweetsScreen } from './ui-sweets.js';
 import { initSummaryScreen } from './ui-summary.js';
 import { initSettingsScreen } from './ui-settings.js';
+import { initEntryDialog } from './entry-dialog.js';
 
 // The screens reachable from the bottom bar.
 const TABS = ['exercise', 'sweets', 'summary', 'settings'];
@@ -47,10 +48,13 @@ function showTab(name) {
 function init() {
   storage.load();
 
+  // One edit dialog, shared by the three screens that list entries.
+  const entryDialog = initEntryDialog(storage);
+
   screens = {
-    exercise: initExerciseScreen(storage, refresh),
-    sweets: initSweetsScreen(storage),
-    summary: initSummaryScreen(storage),
+    exercise: initExerciseScreen(storage, refresh, entryDialog),
+    sweets: initSweetsScreen(storage, entryDialog),
+    summary: initSummaryScreen(storage, entryDialog),
     settings: initSettingsScreen(storage, refresh),
   };
 

@@ -16,6 +16,7 @@ const FILES = [
   'icons/icon-512.png',
   'js/app.js',
   'js/dom.js',
+  'js/entry-dialog.js',
   'js/format.js',
   'js/stats.js',
   'js/storage.js',

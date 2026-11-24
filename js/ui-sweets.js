@@ -5,7 +5,7 @@ import { dayEntries } from './stats.js';
 import { el } from './dom.js';
 import { showToast } from './toast.js';
 
-export function initSweetsScreen(storage) {
+export function initSweetsScreen(storage, entryDialog) {
   const buttonBox = document.getElementById('sweet-buttons');
   const todayLine = document.getElementById('sweets-today-line');
   const todayList = document.getElementById('sweets-today-list');
@@ -22,7 +22,7 @@ export function initSweetsScreen(storage) {
     buttonBox.replaceChildren(...buttons);
   }
 
-  // Today's count and today's sweets, newest first.
+  // Today's count and today's sweets, newest first. Tap one to change or delete it.
   function renderToday() {
     const today = dayEntries(storage.data, Date.now());
     const word = today.sweetsCount === 1 ? 'sweet' : 'sweets';
@@ -36,7 +36,12 @@ export function initSweetsScreen(storage) {
     const newestFirst = [...today.sweets].sort((a, b) => b.eatenAt - a.eatenAt);
     todayList.replaceChildren(
       ...newestFirst.map((s) =>
-        el('li', {}, [el('span', { text: s.name }), el('span', { class: 'entry-time', text: timeOfDay(s.eatenAt) })]),
+        el('li', {}, [
+          el('button', { type: 'button', class: 'entry-button', onclick: () => entryDialog.openEdit('sweet', s, render) }, [
+            el('span', { text: s.name }),
+            el('span', { class: 'entry-time', text: timeOfDay(s.eatenAt) }),
+          ]),
+        ]),
       ),
     );
   }

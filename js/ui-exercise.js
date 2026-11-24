@@ -12,7 +12,7 @@ const TICK_MS = 100;
 
 // onWorkoutChange is called whenever a workout starts or ends, so the app
 // can switch between the Exercise screen and the clock screen.
-export function initExerciseScreen(storage, onWorkoutChange) {
+export function initExerciseScreen(storage, onWorkoutChange, entryDialog) {
   const buttonBox = document.getElementById('exercise-buttons');
   const todayLine = document.getElementById('exercise-today-line');
   const todayList = document.getElementById('exercise-today-list');
@@ -52,7 +52,7 @@ export function initExerciseScreen(storage, onWorkoutChange) {
     buttonBox.replaceChildren(...buttons);
   }
 
-  // Today's total and today's workouts, newest first.
+  // Today's total and today's workouts, newest first. Tap one to change or delete it.
   function renderToday() {
     const today = dayEntries(storage.data, Date.now());
     todayLine.textContent = `Today: ${duration(today.exerciseMs)}`;
@@ -66,8 +66,10 @@ export function initExerciseScreen(storage, onWorkoutChange) {
     todayList.replaceChildren(
       ...newestFirst.map((s) =>
         el('li', {}, [
-          el('span', { text: `${typeName(s.typeId)} ${duration(s.durationMs)}` }),
-          el('span', { class: 'entry-time', text: timeOfDay(s.startedAt) }),
+          el('button', { type: 'button', class: 'entry-button', onclick: () => entryDialog.openEdit('exercise', s, render) }, [
+            el('span', { text: `${typeName(s.typeId)} ${duration(s.durationMs)}` }),
+            el('span', { class: 'entry-time', text: timeOfDay(s.startedAt) }),
+          ]),
         ]),
       ),
     );
