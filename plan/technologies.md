@@ -38,14 +38,14 @@ Last updated: 2026-11-23
 | --- | --- | --- |
 | Node.js | v24.19.0 | Running tests with its built-in test runner (`node --test`). Nothing to install. |
 | Python (`.venv`) | present | `python -m http.server` to serve the app locally. ES modules do not load from a plain double-clicked file, so a local web server is needed. |
-| git | 2.45.1 | Version control. The folder is not yet a git repository. |
-| GitHub CLI (`gh`) | 2.97.0 | Creating the repository and enabling Pages. **Not logged in yet.** |
+| git | 2.45.1 | Version control. Repository: `github.com/YoniGelband/fitnice`, branch `main`. |
+| GitHub CLI (`gh`) | 2.97.0 | Creating the repository and enabling Pages. Logged in. |
 | Chrome DevTools | - | Phone-sized preview on the computer, and inspecting saved data. |
 
 No linter, bundler, or package manager. No `package.json` needed unless that changes.
 
 ## Undecided
 
-- **GitHub account and repository name.** Needed before the first deploy (Milestone 8). `gh auth login` has not been run.
+- ~~**GitHub account and repository name.**~~ Decided 2026-11-24: `YoniGelband/fitnice`, live at https://yonigelband.github.io/fitnice/.
 - **App icon.** A simple generated icon is the default unless the owner supplies one.
 - **Server stack if the app scales.** Deliberately not chosen now. Python (for example FastAPI) is the natural candidate given the owner's setup, but nothing depends on that today.

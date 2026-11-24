@@ -8,7 +8,7 @@ import { el } from './dom.js';
 
 const MS_PER_MINUTE = 60 * 1000;
 const MS_PER_HOUR = 60 * MS_PER_MINUTE;
-const TICK_MS = 250;
+const TICK_MS = 100;
 
 // onWorkoutChange is called whenever a workout starts or ends, so the app
 // can switch between the Exercise screen and the clock screen.
@@ -23,6 +23,7 @@ export function initExerciseScreen(storage, onWorkoutChange) {
   const minutesInput = document.getElementById('done-minutes');
 
   let clockText = null; // the element showing the running time, when a workout is on
+  let clockRing = null; // the round button around it
   let tickHandle = null;
   let done = null; // what the Done dialog is confirming: { elapsedMs, wasRunning }
 
@@ -31,10 +32,15 @@ export function initExerciseScreen(storage, onWorkoutChange) {
     return type ? type.name : 'Workout';
   }
 
-  // Redraw only the clock's digits. Runs several times a second.
+  // Redraw only the clock's digits and ring. Runs several times a second.
   function tick() {
     const active = storage.data.activeTimer;
-    if (active && clockText) clockText.textContent = clock(timer.elapsedMs(active, Date.now()));
+    if (!active || !clockText) return;
+
+    const elapsedMs = timer.elapsedMs(active, Date.now());
+    clockText.textContent = clock(elapsedMs);
+    // The ring fills once per minute: 0 at :00, 0.5 at :30.
+    clockRing.style.setProperty('--sweep', (elapsedMs % MS_PER_MINUTE) / MS_PER_MINUTE);
   }
 
   // One button per exercise type the user has not removed.
@@ -74,20 +80,22 @@ export function initExerciseScreen(storage, onWorkoutChange) {
 
     if (!active) {
       clockText = null;
+      clockRing = null;
       workoutBox.replaceChildren();
       return;
     }
 
     const running = timer.isRunning(active);
     clockText = el('span', { class: 'clock-time' });
+    clockRing = el('button', { type: 'button', class: running ? 'clock' : 'clock paused', onclick: togglePause }, [
+      clockText,
+      el('span', { class: 'clock-hint', text: running ? 'Tap to pause' : 'Paused - tap to resume' }),
+    ]);
 
     workoutBox.replaceChildren(
       el('div', { class: 'workout-panel' }, [
         el('div', { class: 'workout-name', text: typeName(active.typeId) }),
-        el('button', { type: 'button', class: running ? 'clock' : 'clock paused', onclick: togglePause }, [
-          clockText,
-          el('span', { class: 'clock-hint', text: running ? 'Tap to pause' : 'Paused - tap to resume' }),
-        ]),
+        clockRing,
         el('button', { type: 'button', class: 'done-button', text: 'Done', onclick: openDone }),
       ]),
     );

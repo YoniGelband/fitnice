@@ -1,6 +1,6 @@
 # Fitnice - Implementation Plan
 
-Last updated: 2026-11-24. Milestones 1 to 7 are built and checked in a browser. Milestone 8 is built except for the deploy: the manifest, icons, and service worker exist, but the app is not yet on GitHub Pages or installed on the phone, and the service worker has not been run in a browser. The code map below matches the real files as of this date.
+Last updated: 2026-11-24. Milestones 1 to 7 are built and checked in a browser. Milestone 8 is deployed: the app is live at https://yonigelband.github.io/fitnice/ and the service worker was confirmed there (18 files kept, page reloads while offline, checked in desktop Chromium). It has not yet been installed or tried on the phone. The code map below matches the real files as of this date.
 
 To run locally: `.venvScriptspython.exe -m http.server 8010 --bind 127.0.0.1`, then open `http://127.0.0.1:8010` (port 8000 is used by another project on this machine). To test: `node --test`.
 
@@ -17,7 +17,7 @@ The bottom bar has four tabs: Exercise, Sweets, Summary, Settings. Exercise and 
 ### Clock screen (only while a workout is running or paused)
 1. Replaces every other screen, and the bottom bar is hidden, so the app stays here until the workout is finished (owner decision 2026-11-24). Reopening the app mid-workout lands here too.
 2. The clock starts at `0:00:00` and counts up.
-3. Tap the clock: it pauses, dims, and shows "Paused". Tap again: it resumes.
+3. Tap the clock: it pauses, the ring turns grey, the time blinks, and it shows "Paused". Tap again: it resumes.
 4. Tap **Done**: a confirmation shows the duration. It can be corrected. **Save** stores it, **Discard** throws it away, **Keep going** returns to the clock as it was.
 5. After Save or Discard the app returns to the Exercise screen.
 6. Only one workout at a time. This now follows from the design: the exercise buttons cannot be reached during a workout.
@@ -89,7 +89,7 @@ A web page is frozen when the phone locks, so counting ticks would lose time. In
 - `runningSince`: when the current running stretch began, or `null` while paused.
 - Elapsed time = `accumulatedMs` + (now - `runningSince`) if running, otherwise just `accumulatedMs`.
 
-Pause adds the current stretch into `accumulatedMs` and clears `runningSince`. Resume sets `runningSince` to now. The on-screen clock simply recalculates this once a second while the app is open, so it always looks like it never stopped.
+Pause adds the current stretch into `accumulatedMs` and clears `runningSince`. Resume sets `runningSince` to now. The on-screen clock simply recalculates this ten times a second while the app is open, so it always looks like it never stopped.
 
 ## Code map
 
@@ -97,7 +97,7 @@ The project is functions in modules, not classes.
 
 **End to end:** the app loads, reads all saved data, and draws the Exercise screen (or the clock screen if a workout is on). Taps change the data, the change is saved immediately, and the screen redraws from the saved data. The Summary screen calculates its numbers fresh from the entries every time it is shown; no totals are stored.
 
-**One workout, traced:** `app.js` `init` calls `storage.load()` and `refresh()` -> `ui-exercise.js` draws buttons -> tap "Walking" -> `startWorkout` -> `timer.start(typeId, now)` -> `storage.saveActiveTimer()` -> `app.js` `refresh()` sees an active timer, shows the clock screen and hides the bottom bar -> four times a second `tick` calls `timer.elapsedMs()` and `format.clock()` -> tap Done -> `openDone` pauses the timer and shows the dialog -> Save -> `closeDone` -> `storage.addSession()` and `storage.clearActiveTimer()` -> `refresh()` shows the Exercise screen again. Later, `ui-summary.js` calls `stats.weekSummary(data, timestamp)` and draws the result.
+**One workout, traced:** `app.js` `init` calls `storage.load()` and `refresh()` -> `ui-exercise.js` draws buttons -> tap "Walking" -> `startWorkout` -> `timer.start(typeId, now)` -> `storage.saveActiveTimer()` -> `app.js` `refresh()` sees an active timer, shows the clock screen and hides the bottom bar -> ten times a second `tick` calls `timer.elapsedMs()` and `format.clock()`, and moves the ring around the clock -> tap Done -> `openDone` pauses the timer and shows the dialog -> Save -> `closeDone` -> `storage.addSession()` and `storage.clearActiveTimer()` -> `refresh()` shows the Exercise screen again. Later, `ui-summary.js` calls `stats.weekSummary(data, timestamp)` and draws the result.
 
 | File | Responsibility | Key functions |
 | --- | --- | --- |
@@ -180,19 +180,19 @@ Each is built in small steps with an explanation after each one.
 - [x] **5b. Split the Log screen** (owner request, 2026-11-24). Exercise and Sweets became separate tabs, and a workout now takes over the app on its own clock screen with the bottom bar hidden. `ui-log.js` was replaced by `ui-exercise.js` and `ui-sweets.js`. Checked in a browser, including reopening the app mid-workout.
 - [x] **6. Stats and Summary.** `stats.js` with tests, week view, chart, week navigation, edit/delete/add past entry. Done 2026-11-24. Checked in a browser: totals, chart, editing a workout's duration, deleting a sweet, adding a past sweet (the view jumps to that week), week arrows, and refusal of a zero-length workout.
 - [x] **7. Settings.** Edit types, goals with progress bars on Summary, Export and Import. Done 2026-11-24. Checked in a browser: add, rename, remove with Undo; goals saved and shown as bars; export downloads `fitnice-backup-<date>.json`; importing it restores the data; a wrong file is refused and changes nothing.
-- [ ] **8. Installable and offline.** Built 2026-11-24: `manifest.webmanifest`, `icons/` (placeholder white F on green), `sw.js`, the persistent storage request, `.gitignore`. A test checks the service worker's file list against the real files. **Still to do:** deploy to GitHub Pages (blocked on GitHub login and a repository name), install on the phone, and confirm offline use. The service worker itself has not been run in a browser yet.
+- [ ] **8. Installable and offline.** Built 2026-11-24: `manifest.webmanifest`, `icons/` (placeholder white F on green), `sw.js`, the persistent storage request, `.gitignore`. A test checks the service worker's file list against the real files. Deployed 2026-11-24 to https://yonigelband.github.io/fitnice/ (public repository `YoniGelband/fitnice`, Pages serves the `main` branch root; a push to `main` republishes). Offline reload confirmed in desktop Chromium. **Still to do:** install on the phone and confirm offline use there.
 - [ ] **9. Phone test pass.** Run the manual phone checklist and fix what it finds. Includes the 3-hour "still going?" prompt.
 
 - [ ] **10. Design pass.** Owner decision 2026-11-24: visual design is worked on only after the application is functionally complete. Until then styling stays minimal and functional.
 
 ## Open questions and risks
 
-- **GitHub account not connected.** `gh auth login` and a repository name are needed before Milestone 8.
+- ~~**GitHub account not connected.**~~ Resolved 2026-11-24: repository `YoniGelband/fitnice`.
 - **Data loss risk.** If Chrome's site data is cleared or the app is uninstalled with data removal, history is gone. Mitigation: persistent storage request plus Export. Consider a gentle "last export was N weeks ago" note in Settings if this worries the owner.
 - **Updates reaching the phone.** Resolved in design 2026-11-24: the service worker refreshes its copies in the background on every launch, so an update appears on the second launch with no version bump. Still to be confirmed on the phone after deploy.
 - **Rough edges left for the design pass.** Import asks for confirmation with the browser's plain built-in box. A name typed through "Other" on the Sweets screen is logged but not added to the button list.
 - **No sweets during a workout.** The clock screen locks the app until the workout ends, so a sweet eaten mid-workout is logged afterwards (its time can be corrected once editing exists in Milestone 6). Revisit if this is annoying in real use.
-- **Accidental pause.** Tap-to-pause on a large clock can be hit by accident in a pocket. The dimmed "Paused" state makes it visible; revisit if it happens in real use.
+- **Accidental pause.** Tap-to-pause on a large clock can be hit by accident in a pocket. The grey ring and blinking time make it visible; revisit if it happens in real use.
 
 ## Reused infrastructure
 

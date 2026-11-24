@@ -107,57 +107,101 @@ button {
   border-color: var(--accent);
 }
 
-/* The running workout. */
+/* The running workout: name on top, a round clock in the middle, Done at the bottom. */
 .workout-panel {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  background: var(--surface);
+  justify-content: space-between;
+  gap: 24px;
+  /* Full screen height, minus the page's own top and bottom padding. */
+  min-height: calc(100dvh - 100px - env(safe-area-inset-bottom));
+  padding: 24px 0 8px;
 }
 
 .workout-name {
+  font-size: 1.25rem;
   font-weight: 600;
   color: var(--muted);
 }
 
+/* The ring is a circle painted with two colours: accent up to --sweep
+   (how far through the current minute we are), grey for the rest.
+   The ::before circle covers the middle, leaving only a thin ring visible. */
 .clock {
+  --sweep: 0;
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%;
-  padding: 20px 8px;
-  border: 2px solid var(--accent);
-  border-radius: 16px;
-  background: none;
+  justify-content: center;
+  width: min(80vw, 320px);
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: conic-gradient(var(--accent) calc(var(--sweep) * 1turn), var(--border) 0);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.clock::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: var(--bg);
+}
+
+.clock-time,
+.clock-hint {
+  position: relative; /* sit above the ::before circle */
 }
 
 .clock-time {
-  font-size: 3.25rem;
-  font-weight: 700;
+  font-size: clamp(2.5rem, 13vw, 3.5rem);
+  font-weight: 300;
   font-variant-numeric: tabular-nums;
   line-height: 1.1;
 }
 
 .clock-hint {
-  margin-top: 4px;
+  margin-top: 8px;
   font-size: 0.875rem;
   color: var(--muted);
 }
 
 .clock.paused {
-  border-style: dashed;
-  border-color: var(--muted);
+  background: conic-gradient(var(--muted) calc(var(--sweep) * 1turn), var(--border) 0);
 }
 
 .clock.paused .clock-time {
-  opacity: 0.45;
+  animation: blink 1.2s steps(1) infinite;
 }
 
-.done-button,
+@keyframes blink {
+  50% { opacity: 0.3; }
+}
+
+/* People who switched off animations on their phone get a steady, faded time. */
+@media (prefers-reduced-motion: reduce) {
+  .clock.paused .clock-time {
+    animation: none;
+    opacity: 0.5;
+  }
+}
+
+/* A pill: fully rounded ends. */
+.done-button {
+  width: min(60vw, 240px);
+  min-height: 56px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
 dialog button.primary {
   width: 100%;
   min-height: 52px;
