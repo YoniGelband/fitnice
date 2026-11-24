@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1f9d6b">
+  <title>Fitnice</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <main>
+    <section id="screen-exercise" class="screen">
+      <h1>Exercise</h1>
+      <p id="exercise-today-line" class="today-line"></p>
+      <div id="exercise-buttons" class="button-grid"></div>
+      <h2>Today</h2>
+      <ul id="exercise-today-list" class="entry-list"></ul>
+    </section>
+
+    <!-- Shown instead of everything else while a workout is running or paused. -->
+    <section id="screen-clock" class="screen" hidden>
+      <div id="workout"></div>
+    </section>
+
+    <section id="screen-sweets" class="screen" hidden>
+      <h1>Sweets</h1>
+      <p id="sweets-today-line" class="today-line"></p>
+      <div id="sweet-buttons" class="button-grid"></div>
+      <h2>Today</h2>
+      <ul id="sweets-today-list" class="entry-list"></ul>
+    </section>
+
+    <section id="screen-summary" class="screen" hidden>
+      <h1>Summary</h1>
+      <div class="week-nav">
+        <button id="week-prev" type="button" aria-label="Previous week">&lsaquo;</button>
+        <div id="week-label"></div>
+        <button id="week-next" type="button" aria-label="Next week">&rsaquo;</button>
+      </div>
+      <div id="summary-body"></div>
+      <button id="add-entry" type="button" class="big-button wide">Add past entry</button>
+    </section>
+
+    <section id="screen-settings" class="screen" hidden>
+      <h1>Settings</h1>
+
+      <h2>Exercise types</h2>
+      <div id="exercise-type-list"></div>
+      <form id="exercise-type-add" class="settings-row">
+        <input class="text-input" type="text" maxlength="40" placeholder="New exercise" aria-label="New exercise" required>
+        <button>Add</button>
+      </form>
+
+      <h2>Sweets</h2>
+      <div id="sweet-type-list"></div>
+      <form id="sweet-type-add" class="settings-row">
+        <input class="text-input" type="text" maxlength="40" placeholder="New sweet" aria-label="New sweet" required>
+        <button>Add</button>
+      </form>
+
+      <h2>Weekly goals</h2>
+      <p class="dialog-hint">Leave a goal empty to only track.</p>
+      <div id="goal-list"></div>
+
+      <h2>Backup</h2>
+      <p class="dialog-hint">Your data is stored only on this phone. Export saves a copy as a file.</p>
+      <div class="button-grid">
+        <button id="export-button" type="button" class="big-button">Export data</button>
+        <button id="import-button" type="button" class="big-button">Import data</button>
+      </div>
+      <input id="import-file" type="file" accept="application/json,.json" hidden>
+    </section>
+  </main>
+
+  <nav class="bottom-bar">
+    <button type="button" data-screen="exercise">Exercise</button>
+    <button type="button" data-screen="sweets">Sweets</button>
+    <button type="button" data-screen="summary">Summary</button>
+    <button type="button" data-screen="settings">Settings</button>
+  </nav>
+
+  <dialog id="done-dialog">
+    <form method="dialog">
+      <h2 id="done-title">Finish workout?</h2>
+      <p class="dialog-hint">Correct the time if it is wrong.</p>
+      <div class="duration-inputs">
+        <label><input id="done-hours" type="number" inputmode="numeric" min="0" max="23" required> h</label>
+        <label><input id="done-minutes" type="number" inputmode="numeric" min="0" max="59" required> m</label>
+      </div>
+      <button class="primary" value="save">Save</button>
+      <button value="discard" formnovalidate>Discard</button>
+      <button value="keep" formnovalidate>Keep going</button>
+    </form>
+  </dialog>
+
+  <dialog id="other-dialog">
+    <form method="dialog">
+      <h2>What did you have?</h2>
+      <input id="other-name" class="text-input" type="text" maxlength="40" autocomplete="off" required>
+      <button class="primary" value="add">Add</button>
+      <button value="cancel" formnovalidate>Cancel</button>
+    </form>
+  </dialog>
+
+  <dialog id="entry-dialog">
+    <form method="dialog">
+      <h2 id="entry-title">Add past entry</h2>
+      <label id="entry-kind-row" class="field">Kind
+        <select id="entry-kind" class="text-input">
+          <option value="exercise">Exercise</option>
+          <option value="sweet">Sweet</option>
+        </select>
+      </label>
+      <label id="entry-type-row" class="field">Exercise
+        <select id="entry-type" class="text-input"></select>
+      </label>
+      <label id="entry-name-row" class="field">Sweet
+        <input id="entry-name" class="text-input" type="text" maxlength="40" list="sweet-names" autocomplete="off" required>
+      </label>
+      <datalist id="sweet-names"></datalist>
+      <label class="field">Date
+        <input id="entry-date" class="text-input" type="date" required>
+      </label>
+      <label class="field">Time
+        <input id="entry-time" class="text-input" type="time" required>
+      </label>
+      <div id="entry-duration-row" class="duration-inputs">
+        <label><input id="entry-hours" type="number" inputmode="numeric" min="0" max="23" required> h</label>
+        <label><input id="entry-minutes" type="number" inputmode="numeric" min="0" max="59" required> m</label>
+      </div>
+      <button class="primary" value="save">Save</button>
+      <button id="entry-delete" value="delete" formnovalidate>Delete</button>
+      <button value="cancel" formnovalidate>Cancel</button>
+    </form>
+  </dialog>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
