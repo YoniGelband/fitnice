@@ -661,3 +661,92 @@ p.empty {
   font: inherit;
   text-align: center;
 }
+
+/* ---- Finish-workout dialog: the measured time, and the dials to correct it ---- */
+.done-time {
+  margin: 4px 0 0;
+  font-size: 2.25rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+/* A quiet text-only button. The extra class beats the general dialog button rule. */
+dialog button.link-button {
+  align-self: center;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 0;
+  color: var(--heading);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+/* The two dials side by side. The blush band across the middle marks the chosen row. */
+.wheels {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 4px 0;
+}
+
+.wheels::before {
+  content: "";
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--blush);
+}
+
+/* One dial: three rows tall, scrolls with a finger and always comes to rest
+   with a number exactly in the middle (that is what "scroll-snap" does). */
+.wheel {
+  position: relative;
+  width: 4.5rem;
+  height: 132px;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+  /* Fade the rows above and below the middle one. */
+  mask-image: linear-gradient(to bottom, transparent, #000 35%, #000 65%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 35%, #000 65%, transparent);
+}
+
+.wheel::-webkit-scrollbar {
+  display: none;
+}
+
+/* Empty rows at both ends, so the first and last numbers can reach the middle. */
+.wheel::before,
+.wheel::after {
+  content: "";
+  display: block;
+  height: 44px;
+}
+
+.wheel-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  scroll-snap-align: center;
+  color: var(--muted);
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.wheel-item.selected {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.wheel-unit {
+  position: relative;
+  font-weight: 700;
+}

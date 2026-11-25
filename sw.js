@@ -24,6 +24,7 @@ const FILES = [
   'js/timer.js',
   'js/toast.js',
   'js/ui-exercise.js',
+  'js/wheel.js',
   'js/ui-settings.js',
   'js/ui-summary.js',
   'js/ui-sweets.js',

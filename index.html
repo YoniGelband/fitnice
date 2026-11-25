@@ -86,10 +86,14 @@
   <dialog id="done-dialog">
     <form method="dialog">
       <h2 id="done-title">Finish workout?</h2>
-      <p class="dialog-hint">Correct the time if it is wrong.</p>
-      <div class="duration-inputs">
-        <label><input id="done-hours" type="number" inputmode="numeric" min="0" max="23" required> h</label>
-        <label><input id="done-minutes" type="number" inputmode="numeric" min="0" max="59" required> m</label>
+      <p id="done-time" class="done-time"></p>
+      <button id="done-edit" type="button" class="link-button">Edit time</button>
+      <!-- The two dials, shown only after "Edit time" is tapped. -->
+      <div id="done-wheels" class="wheels" hidden>
+        <div id="done-hours" class="wheel" aria-label="Hours"></div>
+        <span class="wheel-unit">h</span>
+        <div id="done-minutes" class="wheel" aria-label="Minutes"></div>
+        <span class="wheel-unit">m</span>
       </div>
       <button class="primary" value="save">Save</button>
       <button value="discard" formnovalidate>Discard</button>

@@ -5,6 +5,7 @@ import * as timer from './timer.js';
 import { clock, duration, timeOfDay } from './format.js';
 import { dayEntries } from './stats.js';
 import { el } from './dom.js';
+import { createWheel } from './wheel.js';
 
 const MS_PER_MINUTE = 60 * 1000;
 const MS_PER_HOUR = 60 * MS_PER_MINUTE;
@@ -46,13 +47,16 @@ export function initExerciseScreen(storage, onWorkoutChange, entryDialog) {
   const workoutBox = document.getElementById('workout');
   const dialog = document.getElementById('done-dialog');
   const dialogTitle = document.getElementById('done-title');
-  const hoursInput = document.getElementById('done-hours');
-  const minutesInput = document.getElementById('done-minutes');
+  const doneTime = document.getElementById('done-time');
+  const editButton = document.getElementById('done-edit');
+  const wheelsBox = document.getElementById('done-wheels');
+  const hoursWheel = createWheel(document.getElementById('done-hours'), 24);
+  const minutesWheel = createWheel(document.getElementById('done-minutes'), 60);
 
   let clockText = null; // the element showing the running time, when a workout is on
   let clockArc = null; // the coloured part of the ring around it
   let tickHandle = null;
-  let done = null; // what the Done dialog is confirming: { elapsedMs, wasRunning }
+  let done = null; // what the Done dialog is confirming: { elapsedMs, wasRunning, edited }
 
   function typeName(typeId) {
     const type = storage.data.exerciseTypes.find((t) => t.id === typeId);
@@ -163,23 +167,38 @@ export function initExerciseScreen(storage, onWorkoutChange, entryDialog) {
     const now = Date.now();
     const elapsedMs = timer.elapsedMs(active, now);
 
-    done = { elapsedMs, wasRunning: timer.isRunning(active) };
+    done = { elapsedMs, wasRunning: timer.isRunning(active), edited: false };
     storage.saveActiveTimer(timer.pause(active, now));
     renderClock();
 
     dialogTitle.textContent = `Finish ${typeName(active.typeId)}?`;
-    hoursInput.value = Math.floor(elapsedMs / MS_PER_HOUR);
-    minutesInput.value = Math.floor((elapsedMs % MS_PER_HOUR) / MS_PER_MINUTE);
+    // Show the measured time as plain text. The dials stay hidden until asked for.
+    doneTime.textContent = clock(elapsedMs);
+    doneTime.hidden = false;
+    editButton.hidden = false;
+    wheelsBox.hidden = true;
     dialog.returnValue = '';
     dialog.showModal();
   }
 
+  // "Edit time": swap the plain time for two dials, set to the measured time.
+  function showWheels() {
+    done.edited = true;
+    doneTime.hidden = true;
+    editButton.hidden = true;
+    wheelsBox.hidden = false;
+    hoursWheel.set(Math.min(23, Math.floor(done.elapsedMs / MS_PER_HOUR)));
+    minutesWheel.set(Math.floor((done.elapsedMs % MS_PER_HOUR) / MS_PER_MINUTE));
+  }
+
   // The duration to save: the exact measured time, unless the user corrected it.
   function confirmedDurationMs() {
-    const hours = Number(hoursInput.value) || 0;
-    const minutes = Number(minutesInput.value) || 0;
+    if (!done.edited) return done.elapsedMs;
+
+    const hours = hoursWheel.get();
+    const minutes = minutesWheel.get();
     const untouched =
-      hours === Math.floor(done.elapsedMs / MS_PER_HOUR) &&
+      hours === Math.min(23, Math.floor(done.elapsedMs / MS_PER_HOUR)) && // 23 is the most the dial can show
       minutes === Math.floor((done.elapsedMs % MS_PER_HOUR) / MS_PER_MINUTE);
 
     return untouched ? done.elapsedMs : hours * MS_PER_HOUR + minutes * MS_PER_MINUTE;
@@ -205,6 +224,7 @@ export function initExerciseScreen(storage, onWorkoutChange, entryDialog) {
     onWorkoutChange();
   }
 
+  editButton.addEventListener('click', showWheels);
   dialog.addEventListener('close', closeDone);
 
   return { render };
