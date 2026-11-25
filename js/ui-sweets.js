@@ -4,6 +4,7 @@ import { timeOfDay } from './format.js';
 import { dayEntries } from './stats.js';
 import { el } from './dom.js';
 import { showToast } from './toast.js';
+import { tile, plusTile, hero } from './tiles.js';
 
 export function initSweetsScreen(storage, entryDialog) {
   const buttonBox = document.getElementById('sweet-buttons');
@@ -12,13 +13,13 @@ export function initSweetsScreen(storage, entryDialog) {
   const otherDialog = document.getElementById('other-dialog');
   const otherInput = document.getElementById('other-name');
 
-  // One button per sweet on the user's list, plus "Other" for anything else.
+  // One tile per sweet on the user's list, plus "Other" for anything else.
   function renderButtons() {
     const buttons = storage.data.sweetTypes
       .filter((type) => !type.archived)
-      .map((type) => el('button', { type: 'button', class: 'big-button', text: type.name, onclick: () => logSweet(type.name) }));
+      .map((type) => tile(type.name, () => logSweet(type.name)));
 
-    buttons.push(el('button', { type: 'button', class: 'big-button', text: 'Other...', onclick: openOther }));
+    buttons.push(plusTile('Other', openOther));
     buttonBox.replaceChildren(...buttons);
   }
 
@@ -26,7 +27,7 @@ export function initSweetsScreen(storage, entryDialog) {
   function renderToday() {
     const today = dayEntries(storage.data, Date.now());
     const word = today.sweetsCount === 1 ? 'sweet' : 'sweets';
-    todayLine.textContent = `Today: ${today.sweetsCount} ${word}`;
+    todayLine.replaceChildren(hero(String(today.sweetsCount), `${word} today`, null));
 
     if (today.sweetsCount === 0) {
       todayList.replaceChildren(el('li', { class: 'empty', text: 'No sweets yet today.' }));

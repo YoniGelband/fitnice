@@ -21,6 +21,7 @@ const FILES = [
   'js/format.js',
   'js/stats.js',
   'js/storage.js',
+  'js/tiles.js',
   'js/timer.js',
   'js/toast.js',
   'js/ui-exercise.js',

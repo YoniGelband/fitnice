@@ -6,6 +6,7 @@ import { clock, duration, timeOfDay } from './format.js';
 import { dayEntries } from './stats.js';
 import { el } from './dom.js';
 import { createWheel } from './wheel.js';
+import { tile, hero } from './tiles.js';
 
 const MS_PER_MINUTE = 60 * 1000;
 const MS_PER_HOUR = 60 * MS_PER_MINUTE;
@@ -80,7 +81,7 @@ export function initExerciseScreen(storage, onWorkoutChange, entryDialog) {
   function renderButtons() {
     const buttons = storage.data.exerciseTypes
       .filter((type) => !type.archived)
-      .map((type) => el('button', { type: 'button', class: 'big-button', text: type.name, onclick: () => startWorkout(type.id) }));
+      .map((type) => tile(type.name, () => startWorkout(type.id)));
 
     buttonBox.replaceChildren(...buttons);
   }
@@ -88,7 +89,12 @@ export function initExerciseScreen(storage, onWorkoutChange, entryDialog) {
   // Today's total and today's workouts, newest first. Tap one to change or delete it.
   function renderToday() {
     const today = dayEntries(storage.data, Date.now());
-    todayLine.textContent = `Today: ${duration(today.exerciseMs)}`;
+    // With a weekly goal, the ring shows progress towards one day's share of it.
+    const goal = storage.data.goals.totalExerciseMinutes;
+    const dailyMs = goal ? (goal * MS_PER_MINUTE) / 7 : null;
+    todayLine.replaceChildren(
+      hero(duration(today.exerciseMs), dailyMs ? `of ${duration(dailyMs)} today` : 'today', dailyMs ? today.exerciseMs / dailyMs : null),
+    );
 
     if (today.sessions.length === 0) {
       todayList.replaceChildren(el('li', { class: 'empty', text: 'No workouts yet today.' }));

@@ -15,7 +15,7 @@
   <main>
     <section id="screen-exercise" class="screen">
       <h1>Exercise</h1>
-      <p id="exercise-today-line" class="today-line"></p>
+      <div id="exercise-today-line"></div>
       <div id="exercise-buttons" class="button-grid"></div>
       <h2>Today</h2>
       <ul id="exercise-today-list" class="entry-list"></ul>
@@ -28,7 +28,7 @@
 
     <section id="screen-sweets" class="screen" hidden>
       <h1>Sweets</h1>
-      <p id="sweets-today-line" class="today-line"></p>
+      <div id="sweets-today-line"></div>
       <div id="sweet-buttons" class="button-grid"></div>
       <h2>Today</h2>
       <ul id="sweets-today-list" class="entry-list"></ul>
@@ -49,29 +49,32 @@
       <h1>Settings</h1>
 
       <h2>Exercise types</h2>
-      <div id="exercise-type-list"></div>
-      <form id="exercise-type-add" class="settings-row">
-        <input class="text-input" type="text" maxlength="40" placeholder="New exercise" aria-label="New exercise" required>
-        <button>Add</button>
-      </form>
+      <!-- The rows are drawn by ui-settings.js above the "Add" row. -->
+      <div id="exercise-type-list" class="card list-card">
+        <form id="exercise-type-add" class="list-row add-row">
+          <input class="plain-input" type="text" maxlength="40" placeholder="+ Add exercise" aria-label="New exercise" required>
+          <button class="small-pill">Add</button>
+        </form>
+      </div>
 
       <h2>Sweets</h2>
-      <div id="sweet-type-list"></div>
-      <form id="sweet-type-add" class="settings-row">
-        <input class="text-input" type="text" maxlength="40" placeholder="New sweet" aria-label="New sweet" required>
-        <button>Add</button>
-      </form>
+      <div id="sweet-type-list" class="card list-card">
+        <form id="sweet-type-add" class="list-row add-row">
+          <input class="plain-input" type="text" maxlength="40" placeholder="+ Add sweet" aria-label="New sweet" required>
+          <button class="small-pill">Add</button>
+        </form>
+      </div>
 
       <h2>Weekly goals</h2>
-      <p class="dialog-hint">Leave a goal empty to only track.</p>
-      <div id="goal-list"></div>
+      <div id="goal-list" class="card list-card"></div>
+      <p class="settings-note">No goal means the app only tracks.</p>
 
       <h2>Backup</h2>
-      <p class="dialog-hint">Your data is stored only on this phone. Export saves a copy as a file.</p>
-      <div class="button-grid">
-        <button id="export-button" type="button" class="big-button">Export data</button>
-        <button id="import-button" type="button" class="big-button">Import data</button>
+      <div class="card list-card">
+        <button id="export-button" type="button" class="list-row row-button">Export data<span class="row-value"></span></button>
+        <button id="import-button" type="button" class="list-row row-button">Import data<span class="row-value"></span></button>
       </div>
+      <p class="settings-note">Your data is stored only on this phone. Export saves a copy as a file.</p>
       <input id="import-file" type="file" accept="application/json,.json" hidden>
     </section>
   </main>
@@ -98,6 +101,22 @@
       <button class="primary" value="save">Save</button>
       <button value="discard" formnovalidate>Discard</button>
       <button value="keep" formnovalidate>Keep going</button>
+    </form>
+  </dialog>
+
+  <dialog id="goal-dialog">
+    <form method="dialog">
+      <h2 id="goal-title">Weekly goal</h2>
+      <p id="goal-hint" class="dialog-hint"></p>
+      <div class="wheels">
+        <div id="goal-first" class="wheel"></div>
+        <span id="goal-first-unit" class="wheel-unit">h</span>
+        <div id="goal-minutes" class="wheel" aria-label="Minutes"></div>
+        <span id="goal-minutes-unit" class="wheel-unit">m</span>
+      </div>
+      <button class="primary" value="save">Save</button>
+      <button value="clear">No goal</button>
+      <button value="cancel">Cancel</button>
     </form>
   </dialog>
 

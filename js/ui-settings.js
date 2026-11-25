@@ -1,9 +1,11 @@
 // The Settings screen: edit the exercise and sweet lists, set weekly goals,
 // and export or import a backup file.
 
-import { dateInputValue } from './format.js';
+import { dateInputValue, duration } from './format.js';
 import { el } from './dom.js';
 import { showToast } from './toast.js';
+import { iconFor } from './tiles.js';
+import { createWheel } from './wheel.js';
 
 // onDataReplaced is called after an import, so the whole app can redraw.
 export function initSettingsScreen(storage, onDataReplaced) {
@@ -12,18 +14,30 @@ export function initSettingsScreen(storage, onDataReplaced) {
   const importButton = document.getElementById('import-button');
   const importFile = document.getElementById('import-file');
 
+  const goalDialog = document.getElementById('goal-dialog');
+  const goalTitle = document.getElementById('goal-title');
+  const goalHint = document.getElementById('goal-hint');
+  const firstUnit = document.getElementById('goal-first-unit');
+  const minutesBox = document.getElementById('goal-minutes');
+  const minutesUnit = document.getElementById('goal-minutes-unit');
+  const firstWheel = createWheel(document.getElementById('goal-first'), 100); // hours, or a count of sweets
+  const minutesWheel = createWheel(minutesBox, 60);
+  let goalEditing = null; // { isDuration, save(value or null) } while the goal dialog is open
+
   // The two editable lists work the same way, so they share their code.
   const lists = [
     { key: 'exerciseTypes', box: document.getElementById('exercise-type-list'), form: document.getElementById('exercise-type-add') },
     { key: 'sweetTypes', box: document.getElementById('sweet-type-list'), form: document.getElementById('sweet-type-add') },
   ];
 
-  // One row per type: its name in an editable box, and a Remove button.
-  function renderList({ key, box }) {
+  // One row per type: a small icon, the name (tap it to rename), and an x to remove.
+  // The rows go above the list's "Add" row, which stays in place.
+  function renderList({ key, box, form }) {
     const rows = storage.data[key]
       .filter((type) => !type.archived)
       .map((type) => {
-        const input = el('input', { class: 'text-input', type: 'text', maxlength: '40', value: type.name, 'aria-label': 'Name' });
+        // The name looks like plain text, but it is a text box: tapping it lets you type.
+        const input = el('input', { class: 'plain-input', type: 'text', maxlength: '40', value: type.name, 'aria-label': 'Name' });
         input.addEventListener('change', () => {
           if (!storage.renameType(key, type.id, input.value)) showToast('That name is empty or already used');
           render();
@@ -31,7 +45,9 @@ export function initSettingsScreen(storage, onDataReplaced) {
 
         const remove = el('button', {
           type: 'button',
-          text: 'Remove',
+          class: 'remove-x',
+          text: '×',
+          'aria-label': `Remove ${type.name}`,
           onclick: () => {
             storage.setTypeArchived(key, type.id, true);
             render();
@@ -45,56 +61,76 @@ export function initSettingsScreen(storage, onDataReplaced) {
           },
         });
 
-        return el('div', { class: 'settings-row' }, [input, remove]);
+        return el('div', { class: 'list-row' }, [el('span', { class: 'row-icon' }, [iconFor(type.name)]), input, remove]);
       });
 
-    box.replaceChildren(...rows);
+    box.replaceChildren(...rows, form);
   }
 
-  // A pair of boxes for hours and minutes. Both empty means "no goal".
-  function durationGoalRow(label, minutes, onChange) {
-    const hoursInput = el('input', { type: 'number', inputmode: 'numeric', min: '0', max: '167', 'aria-label': `${label} hours` });
-    const minutesInput = el('input', { type: 'number', inputmode: 'numeric', min: '0', max: '59', 'aria-label': `${label} minutes` });
-
-    if (minutes) {
-      hoursInput.value = Math.floor(minutes / 60);
-      minutesInput.value = minutes % 60;
-    }
-
-    const changed = () => {
-      const total = (Number(hoursInput.value) || 0) * 60 + (Number(minutesInput.value) || 0);
-      onChange(total > 0 ? total : null);
-    };
-    hoursInput.addEventListener('change', changed);
-    minutesInput.addEventListener('change', changed);
-
-    return el('div', { class: 'settings-row goal-row' }, [
-      el('span', { class: 'goal-label', text: label }),
-      el('label', {}, [hoursInput, ' h']),
-      el('label', {}, [minutesInput, ' m']),
+  // One goal: its name, and its value as text. Tapping opens the goal dialog.
+  function goalRow(label, valueText, onTap) {
+    return el('button', { type: 'button', class: 'list-row row-button', onclick: onTap }, [
+      el('span', { text: label }),
+      el('span', { class: valueText ? 'row-value' : 'row-value muted', text: valueText || 'No goal' }),
     ]);
   }
 
+  // A goal in minutes, shown as "3h 0m".
+  const minutesText = (minutes) => (minutes ? duration(minutes * 60 * 1000) : null);
+
   function renderGoals() {
     const goals = storage.data.goals;
-    const rows = [durationGoalRow('All exercise', goals.totalExerciseMinutes, (m) => storage.setTotalExerciseGoal(m))];
+    const rows = [
+      goalRow('All exercise', minutesText(goals.totalExerciseMinutes), () =>
+        openGoal('All exercise', true, goals.totalExerciseMinutes, (m) => storage.setTotalExerciseGoal(m)),
+      ),
+    ];
 
     for (const type of storage.data.exerciseTypes.filter((t) => !t.archived)) {
-      rows.push(durationGoalRow(type.name, goals.exerciseMinutes[type.id], (m) => storage.setExerciseGoal(type.id, m)));
+      const current = goals.exerciseMinutes[type.id];
+      rows.push(goalRow(type.name, minutesText(current), () => openGoal(type.name, true, current, (m) => storage.setExerciseGoal(type.id, m))));
     }
 
-    const sweetsInput = el('input', { type: 'number', inputmode: 'numeric', min: '0', max: '999', 'aria-label': 'Sweets maximum' });
-    if (goals.sweetsMax) sweetsInput.value = goals.sweetsMax;
-    sweetsInput.addEventListener('change', () => storage.setSweetsMax(Math.floor(Number(sweetsInput.value)) || null));
-
-    rows.push(
-      el('div', { class: 'settings-row goal-row' }, [
-        el('span', { class: 'goal-label', text: 'Sweets (at most)' }),
-        el('label', {}, [sweetsInput, ' a week']),
-      ]),
-    );
+    const max = goals.sweetsMax;
+    rows.push(goalRow('Sweets, at most', max ? `${max} a week` : null, () => openGoal('Sweets', false, max, (n) => storage.setSweetsMax(n))));
 
     goalList.replaceChildren(...rows);
+  }
+
+  // The goal dialog: dials for hours and minutes, or one dial for a number of sweets.
+  function openGoal(title, isDuration, current, save) {
+    goalEditing = { isDuration, save };
+    goalTitle.textContent = title;
+    goalHint.textContent = isDuration ? 'Time per week' : 'Sweets per week, at most';
+    firstUnit.textContent = isDuration ? 'h' : 'a week';
+    minutesBox.hidden = !isDuration;
+    minutesUnit.hidden = !isDuration;
+    goalDialog.returnValue = '';
+    goalDialog.showModal();
+
+    // The dials can only be moved once the dialog is on screen.
+    const value = current || 0;
+    if (isDuration) {
+      firstWheel.set(Math.min(99, Math.floor(value / 60)));
+      minutesWheel.set(value % 60);
+    } else {
+      firstWheel.set(Math.min(99, value));
+    }
+  }
+
+  // Runs however the goal dialog closes. A goal of zero counts as no goal.
+  function closeGoal() {
+    if (!goalEditing) return;
+    const { isDuration, save } = goalEditing;
+    goalEditing = null;
+
+    if (goalDialog.returnValue === 'save') {
+      const value = isDuration ? firstWheel.get() * 60 + minutesWheel.get() : firstWheel.get();
+      save(value > 0 ? value : null);
+    } else if (goalDialog.returnValue === 'clear') {
+      save(null);
+    }
+    render();
   }
 
   function render() {
@@ -140,12 +176,14 @@ export function initSettingsScreen(storage, onDataReplaced) {
       if (storage.addType(list.key, input.value)) input.value = '';
       else showToast('That name is empty or already on the list');
       render();
+      input.focus(); // keep the keyboard up, to add several in a row
     });
   }
 
   exportButton.addEventListener('click', exportData);
   importButton.addEventListener('click', () => importFile.click());
   importFile.addEventListener('change', importData);
+  goalDialog.addEventListener('close', closeGoal);
 
   return { render };
 }
