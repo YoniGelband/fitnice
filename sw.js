@@ -14,6 +14,7 @@ const FILES = [
   'icons/icon.svg',
   'icons/icon-192.png',
   'icons/icon-512.png',
+  'fonts/montserrat.woff2',
   'js/app.js',
   'js/dom.js',
   'js/entry-dialog.js',

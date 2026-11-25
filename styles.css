@@ -1,23 +1,43 @@
-/* Colours live in one place so light and dark themes only swap these values. */
+/* Montserrat is stored with the app (fonts/), so it also works offline. */
+@font-face {
+  font-family: "Montserrat";
+  src: url("fonts/montserrat.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+/* Colours live in one place so light and dark themes only swap these values.
+   The palette is rose (light accent) and plum (dark accent). */
 :root {
-  --bg: #f6f7f9;
+  --bg: #ffffff;
   --surface: #ffffff;
-  --text: #1c1f24;
-  --muted: #6b7280;
-  --accent: #1f9d6b;
-  --border: #e2e5ea;
-  --danger: #d1493f;
+  --text: #2a1622;
+  --muted: #8c7480;
+  --rose: #f27da4;
+  --plum: #8a2f5e;
+  --heading: #8a2f5e;
+  --blush: #fde3ec;
+  --track: #ece6e9;
+  --border: #f3dfe7;
+  --danger: #c22b3a;
+  --shadow: 0 6px 18px rgba(138, 47, 94, 0.12);
   --bar-height: 64px;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #121417;
-    --surface: #1c1f24;
-    --text: #eef0f3;
-    --muted: #9aa3af;
-    --accent: #3ccf94;
-    --border: #2b3038;
+    --bg: #1e121a;
+    --surface: #2c1b26;
+    --text: #f7eaf0;
+    --muted: #b79aa8;
+    --rose: #f58fb0;
+    --plum: #b8457f;
+    --heading: #f5a9c5;
+    --blush: #3a2030;
+    --track: #44303a;
+    --border: #44303a;
+    --danger: #ff7a85;
+    --shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
   }
 }
 
@@ -25,13 +45,39 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   font-size: 16px;
+  font-weight: 500;
   line-height: 1.4;
+}
+
+/* The soft waves behind every screen: two wavy shapes drawn as a picture
+   (each fades out downwards), over a soft blush glow. It stays put while the page scrolls. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: auto 0 0 0;
+  height: 55vh;
+  z-index: -1;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 120' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23f27da4' stop-opacity='.16'/%3E%3Cstop offset='1' stop-color='%23f27da4' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M0 60 C60 20 120 20 180 55 S310 100 400 30 V120 H0Z' fill='url(%23g)'/%3E%3Cpath d='M0 85 C70 50 130 110 220 80 S340 40 400 75 V120 H0Z' fill='url(%23g)'/%3E%3C/svg%3E") top / 100% 160px no-repeat,
+    linear-gradient(to bottom, transparent 40px, var(--blush) 45%, var(--bg) 100%);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  body::before {
+    opacity: 0.5;
+  }
 }
 
 /* Leave room at the bottom so the fixed bar never covers content. */
@@ -43,10 +89,34 @@ main {
 }
 
 h1 {
-  margin: 8px 0 16px;
-  font-size: 1.5rem;
+  margin: 16px 0 8px;
+  color: var(--heading);
+  font-size: 1.75rem;
+  font-weight: 800;
+  text-align: center;
 }
 
+h2 {
+  margin: 28px 0 12px;
+  color: var(--heading);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+h3 {
+  margin: 16px 0 8px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---- Bottom bar ---- */
 .bottom-bar {
   position: fixed;
   left: 0;
@@ -56,38 +126,44 @@ h1 {
   height: calc(var(--bar-height) + env(safe-area-inset-bottom));
   padding-bottom: env(safe-area-inset-bottom);
   background: var(--surface);
-  border-top: 1px solid var(--border);
+  border-radius: 22px 22px 0 0;
+  box-shadow: 0 -4px 18px rgba(138, 47, 94, 0.1);
 }
 
 .bottom-bar button {
+  position: relative;
   flex: 1;
   border: 0;
   background: none;
   color: var(--muted);
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 700;
 }
 
 .bottom-bar button.active {
-  color: var(--accent);
+  color: var(--heading);
 }
 
-h2 {
-  margin: 24px 0 12px;
-  font-size: 1rem;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+/* A small rose dash above the current page's name. */
+.bottom-bar button.active::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  width: 22px;
+  height: 4px;
+  margin-left: -11px;
+  border-radius: 2px;
+  background: var(--rose);
 }
 
-button {
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
+/* ---- Exercise and sweet buttons: two per row, tall enough for a thumb ---- */
+.today-line {
+  margin: 0 0 20px;
+  font-weight: 600;
+  text-align: center;
 }
 
-/* Exercise and sweet buttons: two per row, tall enough for a thumb. */
 .button-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -95,19 +171,27 @@ button {
 }
 
 .big-button {
-  min-height: 64px;
+  min-height: 72px;
   padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
+  border: 0;
+  border-radius: 18px;
   background: var(--surface);
-  font-weight: 600;
+  color: var(--heading);
+  font-weight: 700;
+  box-shadow: var(--shadow);
 }
 
 .big-button:active {
-  border-color: var(--accent);
+  background: var(--rose);
+  color: #ffffff;
 }
 
-/* The running workout: name on top, a round clock in the middle, Done at the bottom. */
+.big-button.wide {
+  width: 100%;
+  margin-top: 24px;
+}
+
+/* ---- The running workout: title on top, the ring in the middle, Done at the bottom ---- */
 .workout-panel {
   display: flex;
   flex-direction: column;
@@ -120,58 +204,70 @@ button {
 }
 
 .workout-name {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--muted);
+  color: var(--heading);
+  font-size: 1.5rem;
+  font-weight: 800;
 }
 
-/* The ring is a circle painted with two colours: accent up to --sweep
-   (how far through the current minute we are), grey for the rest.
-   The ::before circle covers the middle, leaving only a thin ring visible. */
+/* The round button that pauses and resumes. The ring itself is drawn by
+   two circles in an SVG picture: a grey track and a rose arc on top. */
 .clock {
-  --sweep: 0;
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: min(80vw, 320px);
+  width: min(82vw, 330px);
   aspect-ratio: 1;
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: conic-gradient(var(--accent) calc(var(--sweep) * 1turn), var(--border) 0);
-  -webkit-tap-highlight-color: transparent;
+  background: none;
 }
 
-.clock::before {
-  content: "";
+.clock-ring {
   position: absolute;
-  inset: 6px;
-  border-radius: 50%;
-  background: var(--bg);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg); /* start the arc at the top instead of the right */
+}
+
+.clock-ring circle {
+  fill: none;
+  stroke-width: 9;
+}
+
+.ring-track {
+  stroke: var(--track);
+}
+
+.ring-arc {
+  stroke: var(--rose);
+  stroke-linecap: round; /* rounded ends, as in the template */
 }
 
 .clock-time,
 .clock-hint {
-  position: relative; /* sit above the ::before circle */
+  position: relative; /* sit above the ring picture */
 }
 
 .clock-time {
-  font-size: clamp(2.5rem, 13vw, 3.5rem);
-  font-weight: 300;
+  font-size: clamp(2.25rem, 11.5vw, 3.125rem);
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
   line-height: 1.1;
 }
 
 .clock-hint {
   margin-top: 8px;
+  color: var(--heading);
   font-size: 0.875rem;
-  color: var(--muted);
+  font-weight: 600;
 }
 
-.clock.paused {
-  background: conic-gradient(var(--muted) calc(var(--sweep) * 1turn), var(--border) 0);
+.clock.paused .ring-arc {
+  stroke: var(--muted);
 }
 
 .clock.paused .clock-time {
@@ -190,40 +286,38 @@ button {
   }
 }
 
-/* A pill: fully rounded ends. */
-.done-button {
-  width: min(60vw, 240px);
-  min-height: 56px;
+/* Pill buttons: fully rounded ends, wide-spaced capital letters. */
+.done-button,
+dialog button.primary {
+  min-height: 54px;
   border: 0;
   border-radius: 999px;
-  background: var(--accent);
+  background: var(--plum);
   color: #ffffff;
-  font-size: 1.125rem;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
-dialog button.primary {
-  width: 100%;
-  min-height: 52px;
-  border: 0;
-  border-radius: 14px;
-  background: var(--accent);
-  color: #ffffff;
-  font-weight: 700;
+.done-button {
+  width: min(60vw, 240px);
+  font-size: 1.0625rem;
+  box-shadow: var(--shadow);
 }
 
-/* The Done confirmation. */
+/* ---- Dialogs ---- */
 dialog {
   width: min(92vw, 360px);
-  padding: 20px;
-  border: 1px solid var(--border);
-  border-radius: 18px;
+  padding: 22px;
+  border: 0;
+  border-radius: 24px;
   background: var(--surface);
   color: var(--text);
+  box-shadow: 0 12px 40px rgba(42, 22, 34, 0.3);
 }
 
 dialog::backdrop {
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(42, 22, 34, 0.5);
 }
 
 dialog form {
@@ -235,9 +329,8 @@ dialog form {
 dialog h2 {
   margin: 0;
   font-size: 1.25rem;
-  color: var(--text);
-  text-transform: none;
-  letter-spacing: 0;
+  font-weight: 800;
+  text-align: center;
 }
 
 .dialog-hint {
@@ -245,18 +338,23 @@ dialog h2 {
   color: var(--muted);
 }
 
+dialog .dialog-hint {
+  text-align: center;
+}
+
 .duration-inputs {
   display: flex;
+  justify-content: center;
   gap: 16px;
   margin: 6px 0;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .duration-inputs input {
   width: 4.5rem;
   padding: 10px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  border: 2px solid var(--border);
+  border-radius: 14px;
   background: var(--bg);
   color: var(--text);
   font: inherit;
@@ -266,13 +364,48 @@ dialog h2 {
 
 dialog button {
   min-height: 48px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
+  border: 2px solid var(--border);
+  border-radius: 999px;
   background: none;
-  font-weight: 600;
+  color: var(--heading);
+  font-weight: 700;
 }
 
-/* Short messages above the bottom bar. */
+dialog button.primary {
+  width: 100%;
+}
+
+#entry-delete {
+  border-color: transparent;
+  color: var(--danger);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--heading);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.text-input {
+  padding: 12px 14px;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.text-input:focus,
+.duration-inputs input:focus,
+.goal-row input:focus {
+  outline: none;
+  border-color: var(--rose);
+}
+
+/* ---- Short messages above the bottom bar ---- */
 .toast {
   position: fixed;
   left: 16px;
@@ -284,72 +417,79 @@ dialog button {
   gap: 12px;
   max-width: 528px;
   margin: 0 auto;
-  padding: 12px 16px;
-  border-radius: 12px;
-  background: var(--text);
-  color: var(--bg);
-}
-
-.toast[hidden] {
-  display: none;
+  padding: 12px 20px;
+  border-radius: 999px;
+  background: var(--plum);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: var(--shadow);
 }
 
 .toast button {
   border: 0;
   background: none;
   color: inherit;
-  font-weight: 700;
+  font-weight: 800;
   text-decoration: underline;
 }
 
-/* Today's totals and entries on the Exercise and Sweets screens. */
-.today-line {
-  margin: 0 0 16px;
-  color: var(--muted);
-}
-
+/* ---- Lists of entries (Today on Exercise and Sweets, and on Summary) ---- */
 .entry-list {
   margin: 0;
   padding: 0;
   list-style: none;
-  border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 18px;
   background: var(--surface);
+  box-shadow: var(--shadow);
+  overflow: hidden;
 }
 
 .entry-list li {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 14px 16px;
   border-top: 1px solid var(--border);
+  font-weight: 600;
 }
 
 .entry-list li:first-child {
   border-top: 0;
 }
 
+.entry-list li:has(.entry-button) {
+  padding: 0;
+}
+
 .entry-list .empty,
-.entry-time {
+.entry-time,
+p.empty {
   color: var(--muted);
+  font-weight: 500;
 }
 
-.text-input {
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--bg);
-  color: var(--text);
-  font: inherit;
+.entry-button {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 0;
+  background: none;
+  font-weight: 600;
+  text-align: left;
 }
 
-/* The bar is hidden while a workout is on. */
-.bottom-bar[hidden] {
-  display: none;
+.entry-button:active {
+  background: var(--blush);
 }
 
-.bottom-bar button {
-  font-size: 0.875rem;
+/* A small arrow shows that an entry can be tapped to change it. */
+.entry-button .entry-time::after {
+  content: " \203A";
+  color: var(--rose);
+  font-size: 1.125rem;
+  font-weight: 800;
 }
 
 /* ---- Summary ---- */
@@ -361,12 +501,16 @@ dialog button {
 }
 
 .week-nav button {
-  width: 48px;
-  height: 48px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
   background: var(--surface);
+  color: var(--heading);
   font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: var(--shadow);
 }
 
 .week-nav button:disabled {
@@ -374,19 +518,19 @@ dialog button {
 }
 
 #week-label {
-  font-weight: 600;
+  font-weight: 700;
   text-align: center;
 }
 
 .card {
-  padding: 12px 16px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
+  padding: 14px 18px;
+  border-radius: 18px;
   background: var(--surface);
+  box-shadow: var(--shadow);
 }
 
 .card + .card {
-  margin-top: 12px;
+  margin-top: 14px;
 }
 
 .total-row {
@@ -397,36 +541,43 @@ dialog button {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-}
-
-.total-value {
   font-weight: 600;
 }
 
+.total-value {
+  font-weight: 800;
+}
+
+/* Goal progress: a pill-shaped track with a rose fill. */
 .bar {
-  height: 8px;
-  margin-top: 6px;
-  border-radius: 4px;
-  background: var(--border);
+  height: 10px;
+  margin-top: 8px;
+  border-radius: 999px;
+  background: var(--track);
   overflow: hidden;
 }
 
 .bar-fill {
   height: 100%;
-  background: var(--muted);
+  border-radius: 999px;
+  background: var(--rose);
 }
 
 .bar.reached .bar-fill {
-  background: var(--accent);
+  background: var(--plum);
 }
 
 .bar.over .bar-fill {
   background: var(--danger);
 }
 
+/* The week chart: seven pill-shaped tracks, each filled from the bottom,
+   with the day's letter above and the day's time below. */
 .chart {
   display: flex;
-  gap: 6px;
+  gap: 8px;
+  padding-top: 16px;
+  padding-bottom: 16px;
 }
 
 .chart-column {
@@ -434,77 +585,43 @@ dialog button {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   min-width: 0;
 }
 
-.chart-value {
-  height: 1.2em;
-  font-size: 0.6875rem;
-  color: var(--muted);
-  white-space: nowrap;
+.chart-day {
+  order: 1;
+  color: var(--heading);
+  font-size: 0.8125rem;
+  font-weight: 700;
 }
 
 .chart-track {
+  order: 2;
   display: flex;
   align-items: flex-end;
-  width: 100%;
-  height: 96px;
+  width: min(100%, 26px);
+  height: 104px;
+  border-radius: 999px;
+  background: var(--track);
+  overflow: hidden;
 }
 
 .chart-bar {
   width: 100%;
-  min-height: 2px;
-  border-radius: 4px 4px 0 0;
-  background: var(--accent);
+  border-radius: 999px;
+  background: var(--rose);
 }
 
-.chart-day {
-  font-size: 0.8125rem;
-  color: var(--muted);
+.chart-value {
+  order: 3;
+  height: 1.2em;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
-h3 {
-  margin: 16px 0 8px;
-  font-size: 0.9375rem;
-}
-
-.entry-list li:has(.entry-button) {
-  padding: 0;
-}
-
-.entry-button {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  width: 100%;
-  padding: 12px 16px;
-  border: 0;
-  background: none;
-  text-align: left;
-}
-
-p.empty {
-  color: var(--muted);
-}
-
-.big-button.wide {
-  width: 100%;
-  margin-top: 24px;
-}
-
-/* ---- Entry dialog and Settings ---- */
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-weight: 600;
-}
-
-[hidden] {
-  display: none !important;
-}
-
+/* ---- Settings ---- */
 .settings-row {
   display: flex;
   align-items: center;
@@ -515,34 +632,32 @@ p.empty {
 .settings-row .text-input {
   flex: 1;
   min-width: 0;
+  background: var(--surface);
 }
 
 .settings-row button {
   min-height: 46px;
-  padding: 0 14px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface);
-  font-weight: 600;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--blush);
+  color: var(--heading);
+  font-size: 0.875rem;
+  font-weight: 700;
 }
 
 .goal-label {
   flex: 1;
+  font-weight: 600;
 }
 
 .goal-row input {
   width: 3.75rem;
   padding: 10px 6px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  border: 2px solid var(--border);
+  border-radius: 14px;
   background: var(--surface);
   color: var(--text);
   font: inherit;
   text-align: center;
-}
-
-/* A small arrow shows that an entry can be tapped to change it. */
-.entry-button .entry-time::after {
-  content: " \203A";
-  font-size: 1.125rem;
 }

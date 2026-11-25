@@ -15,7 +15,11 @@ Last updated: 2026-11-23
 
 ## Libraries
 
-**None.** The bar chart is drawn with plain HTML/CSS bars. No chart library, no date library (week maths is a few small functions we write and test).
+**None** (the font file above is not code). The bar chart is drawn with plain HTML/CSS bars. No chart library, no date library (week maths is a few small functions we write and test).
+
+## Fonts
+
+**Montserrat** (variable weight, Latin subset, 38 KB `fonts/montserrat.woff2`), the font named by the design template. Open licence (SIL Open Font License), so it can be shipped with the app. Stored in the project and in the service worker's file list rather than loaded from Google, so the app still needs no internet. Downloaded 2026-11-25 from the Fontsource package on jsDelivr.
 
 ## Browser features used
 

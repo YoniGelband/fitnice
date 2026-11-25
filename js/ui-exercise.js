@@ -10,6 +10,33 @@ const MS_PER_MINUTE = 60 * 1000;
 const MS_PER_HOUR = 60 * MS_PER_MINUTE;
 const TICK_MS = 100;
 
+// The ring is a circle of radius 42 inside a 100 x 100 picture.
+const RING_RADIUS = 42;
+const RING_LENGTH = 2 * Math.PI * RING_RADIUS; // how long the line is, all the way round
+const SVG = 'http://www.w3.org/2000/svg';
+
+// Draw the ring: a grey track, and on top of it the arc that grows.
+// Returns the picture and the arc, so the arc can be updated later.
+function buildRing() {
+  const circle = (cls) => {
+    const c = document.createElementNS(SVG, 'circle');
+    c.setAttribute('class', cls);
+    c.setAttribute('cx', 50);
+    c.setAttribute('cy', 50);
+    c.setAttribute('r', RING_RADIUS);
+    return c;
+  };
+
+  const svg = document.createElementNS(SVG, 'svg');
+  svg.setAttribute('class', 'clock-ring');
+  svg.setAttribute('viewBox', '0 0 100 100');
+  svg.setAttribute('aria-hidden', 'true');
+
+  const arc = circle('ring-arc');
+  svg.append(circle('ring-track'), arc);
+  return { svg, arc };
+}
+
 // onWorkoutChange is called whenever a workout starts or ends, so the app
 // can switch between the Exercise screen and the clock screen.
 export function initExerciseScreen(storage, onWorkoutChange, entryDialog) {
@@ -23,7 +50,7 @@ export function initExerciseScreen(storage, onWorkoutChange, entryDialog) {
   const minutesInput = document.getElementById('done-minutes');
 
   let clockText = null; // the element showing the running time, when a workout is on
-  let clockRing = null; // the round button around it
+  let clockArc = null; // the coloured part of the ring around it
   let tickHandle = null;
   let done = null; // what the Done dialog is confirming: { elapsedMs, wasRunning }
 
@@ -39,8 +66,10 @@ export function initExerciseScreen(storage, onWorkoutChange, entryDialog) {
 
     const elapsedMs = timer.elapsedMs(active, Date.now());
     clockText.textContent = clock(elapsedMs);
-    // The ring fills once per minute: 0 at :00, 0.5 at :30.
-    clockRing.style.setProperty('--sweep', (elapsedMs % MS_PER_MINUTE) / MS_PER_MINUTE);
+    // The ring fills once per minute: empty at :00, half way round at :30.
+    // A dashed line with one dash of this length draws exactly that much of the circle.
+    const drawn = ((elapsedMs % MS_PER_MINUTE) / MS_PER_MINUTE) * RING_LENGTH;
+    clockArc.setAttribute('stroke-dasharray', `${drawn} ${RING_LENGTH}`);
   }
 
   // One button per exercise type the user has not removed.
@@ -82,14 +111,17 @@ export function initExerciseScreen(storage, onWorkoutChange, entryDialog) {
 
     if (!active) {
       clockText = null;
-      clockRing = null;
+      clockArc = null;
       workoutBox.replaceChildren();
       return;
     }
 
     const running = timer.isRunning(active);
     clockText = el('span', { class: 'clock-time' });
-    clockRing = el('button', { type: 'button', class: running ? 'clock' : 'clock paused', onclick: togglePause }, [
+    const ring = buildRing();
+    clockArc = ring.arc;
+    const clockButton = el('button', { type: 'button', class: running ? 'clock' : 'clock paused', onclick: togglePause }, [
+      ring.svg,
       clockText,
       el('span', { class: 'clock-hint', text: running ? 'Tap to pause' : 'Paused - tap to resume' }),
     ]);
@@ -97,7 +129,7 @@ export function initExerciseScreen(storage, onWorkoutChange, entryDialog) {
     workoutBox.replaceChildren(
       el('div', { class: 'workout-panel' }, [
         el('div', { class: 'workout-name', text: typeName(active.typeId) }),
-        clockRing,
+        clockButton,
         el('button', { type: 'button', class: 'done-button', text: 'Done', onclick: openDone }),
       ]),
     );
