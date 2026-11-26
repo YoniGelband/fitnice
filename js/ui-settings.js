@@ -4,7 +4,7 @@
 import { dateInputValue, duration } from './format.js';
 import { el } from './dom.js';
 import { showToast } from './toast.js';
-import { iconFor } from './tiles.js';
+import { drawIcon, suggestIcons, typeIcon } from './tiles.js';
 import { createWheel } from './wheel.js';
 
 // onDataReplaced is called after an import, so the whole app can redraw.
@@ -22,6 +22,11 @@ export function initSettingsScreen(storage, onDataReplaced) {
   const minutesUnit = document.getElementById('goal-minutes-unit');
   const firstWheel = createWheel(document.getElementById('goal-first'), 100); // hours, or a count of sweets
   const minutesWheel = createWheel(minutesBox, 60);
+  const iconDialog = document.getElementById('icon-dialog');
+  const iconTitle = document.getElementById('icon-title');
+  const iconChoices = document.getElementById('icon-choices');
+  let iconEditing = null; // { key, id } of the type whose picture is being chosen
+
   let goalEditing = null; // { isDuration, save(value or null) } while the goal dialog is open
 
   // The two editable lists work the same way, so they share their code.
@@ -61,10 +66,38 @@ export function initSettingsScreen(storage, onDataReplaced) {
           },
         });
 
-        return el('div', { class: 'list-row' }, [el('span', { class: 'row-icon' }, [iconFor(type.name)]), input, remove]);
+        // The small picture is a button too: tap it to choose a different one.
+        const icon = el('button', { type: 'button', class: 'row-icon', 'aria-label': `Change the icon for ${type.name}`, onclick: () => openIcons(key, type) }, [
+          drawIcon(typeIcon(type, kindOf(key))),
+        ]);
+        return el('div', { class: 'list-row' }, [icon, input, remove]);
       });
 
     box.replaceChildren(...rows, form);
+  }
+
+  const kindOf = (key) => (key === 'sweetTypes' ? 'sweet' : 'exercise');
+
+  // The icon dialog: three pictures suggested from the name, tap one to use it.
+  function openIcons(key, type) {
+    iconEditing = { key, id: type.id };
+    iconTitle.textContent = `An icon for ${type.name}`;
+    const current = typeIcon(type, kindOf(key));
+    iconChoices.replaceChildren(
+      ...suggestIcons(type.name, kindOf(key)).map((icon) =>
+        // Each choice closes the dialog with its icon's name as the answer.
+        el('button', { class: icon === current ? 'icon-choice current' : 'icon-choice', value: icon, 'aria-label': icon }, [drawIcon(icon)]),
+      ),
+    );
+    iconDialog.returnValue = '';
+    iconDialog.showModal();
+  }
+
+  function closeIcons() {
+    const choice = iconDialog.returnValue;
+    if (iconEditing && choice && choice !== 'cancel') storage.setTypeIcon(iconEditing.key, iconEditing.id, choice);
+    iconEditing = null;
+    render();
   }
 
   // One goal: its name, and its value as text. Tapping opens the goal dialog.
@@ -173,10 +206,15 @@ export function initSettingsScreen(storage, onDataReplaced) {
       event.preventDefault();
       const input = list.form.querySelector('input');
 
-      if (storage.addType(list.key, input.value)) input.value = '';
-      else showToast('That name is empty or already on the list');
+      const added = storage.addType(list.key, input.value);
+      if (!added) {
+        showToast('That name is empty or already on the list');
+        return;
+      }
+      input.value = '';
       render();
-      input.focus(); // keep the keyboard up, to add several in a row
+      // Straight away, offer three pictures to choose from for the new one.
+      openIcons(list.key, added);
     });
   }
 
@@ -184,6 +222,7 @@ export function initSettingsScreen(storage, onDataReplaced) {
   importButton.addEventListener('click', () => importFile.click());
   importFile.addEventListener('change', importData);
   goalDialog.addEventListener('close', closeGoal);
+  iconDialog.addEventListener('close', closeIcons);
 
   return { render };
 }

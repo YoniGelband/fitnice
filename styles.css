@@ -938,3 +938,55 @@ dialog button.link-button {
   position: relative;
   font-weight: 700;
 }
+
+/* ---- Icon dialog: three pictures to choose from ---- */
+.icon-choices {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 8px 0;
+}
+
+/* The extra class beats the general dialog button rule (border, pill shape). */
+dialog button.icon-choice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background: var(--blush);
+  color: var(--heading);
+}
+
+dialog button.icon-choice.current {
+  border-color: var(--rose);
+}
+
+dialog button.icon-choice svg {
+  width: 34px;
+  height: 34px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+dialog button.icon-choice svg .dot {
+  fill: currentColor;
+  stroke: none;
+}
+
+/* The small picture in a Settings row is a button. */
+button.row-icon {
+  padding: 0;
+  border: 0;
+}
+
+/* No browser focus ring on the choices: the rose border marks the current one. */
+dialog button.icon-choice:focus {
+  outline: none;
+}

@@ -51,7 +51,9 @@ const isText = (v) => typeof v === 'string' && v.length > 0;
 const isAmount = (v) => typeof v === 'number' && Number.isFinite(v) && v >= 0;
 const isAmountOrNull = (v) => v === null || isAmount(v);
 
-const isType = (t) => isObject(t) && isText(t.id) && isText(t.name) && typeof t.archived === 'boolean';
+// icon is optional: the picture the user chose. Without it, one is picked from the name.
+const isType = (t) =>
+  isObject(t) && isText(t.id) && isText(t.name) && typeof t.archived === 'boolean' && (t.icon === undefined || isText(t.icon));
 const isSession = (s) => isObject(s) && isText(s.id) && isText(s.typeId) && isAmount(s.startedAt) && isAmount(s.durationMs);
 const isSweet = (s) => isObject(s) && isText(s.id) && isText(s.name) && isAmount(s.eatenAt);
 const isTimer = (t) =>
@@ -193,6 +195,15 @@ export function createStorage(backend) {
     return true;
   }
 
+  // Remember which picture the user chose for a type.
+  function setTypeIcon(list, id, icon) {
+    const type = data[list].find((t) => t.id === id);
+    if (!type || !isText(icon)) return false;
+    type.icon = icon;
+    save();
+    return true;
+  }
+
   // A goal is a positive number, or null for "no goal".
   const cleanGoal = (value) => (typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : null);
 
@@ -246,6 +257,7 @@ export function createStorage(backend) {
     addType,
     renameType,
     setTypeArchived,
+    setTypeIcon,
     setExerciseGoal,
     setTotalExerciseGoal,
     setSweetsMax,

@@ -4,7 +4,7 @@ import { timeOfDay } from './format.js';
 import { dayEntries } from './stats.js';
 import { el } from './dom.js';
 import { showToast } from './toast.js';
-import { tile, plusTile, hero } from './tiles.js';
+import { tile, plusTile, hero, typeIcon } from './tiles.js';
 
 export function initSweetsScreen(storage, entryDialog) {
   const buttonBox = document.getElementById('sweet-buttons');
@@ -17,7 +17,7 @@ export function initSweetsScreen(storage, entryDialog) {
   function renderButtons() {
     const buttons = storage.data.sweetTypes
       .filter((type) => !type.archived)
-      .map((type) => tile(type.name, () => logSweet(type.name)));
+      .map((type) => tile(type.name, typeIcon(type, 'sweet'), () => logSweet(type.name)));
 
     buttons.push(plusTile('Other', openOther));
     buttonBox.replaceChildren(...buttons);

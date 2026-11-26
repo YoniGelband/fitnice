@@ -6,7 +6,7 @@ import { clock, duration, timeOfDay } from './format.js';
 import { dayEntries } from './stats.js';
 import { el } from './dom.js';
 import { createWheel } from './wheel.js';
-import { tile, hero } from './tiles.js';
+import { tile, hero, typeIcon } from './tiles.js';
 
 const MS_PER_MINUTE = 60 * 1000;
 const MS_PER_HOUR = 60 * MS_PER_MINUTE;
@@ -81,7 +81,7 @@ export function initExerciseScreen(storage, onWorkoutChange, entryDialog) {
   function renderButtons() {
     const buttons = storage.data.exerciseTypes
       .filter((type) => !type.archived)
-      .map((type) => tile(type.name, () => startWorkout(type.id)));
+      .map((type) => tile(type.name, typeIcon(type, 'exercise'), () => startWorkout(type.id)));
 
     buttonBox.replaceChildren(...buttons);
   }
